@@ -1,10 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-// Force dynamic rendering to prevent build issues with searchParams
-export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
@@ -13,7 +10,10 @@ import { toast } from 'sonner'
 
 type CallbackStatus = 'processing' | 'success' | 'error'
 
-export default function AuthCallbackPage() {
+// Force dynamic rendering to prevent build issues with searchParams
+export const dynamic = 'force-dynamic'
+
+function AuthCallbackContent() {
   const [status, setStatus] = useState<CallbackStatus>('processing')
   const [error, setError] = useState('')
   
@@ -198,5 +198,31 @@ export default function AuthCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <Loader2 className="h-16 w-16 text-blue-500 mx-auto animate-spin" />
+            <div className="space-y-2">
+              <CardTitle className="text-2xl font-bold">
+                Loading...
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-gray-600">
+              Please wait while we process your authentication.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }

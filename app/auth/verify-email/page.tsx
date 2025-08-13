@@ -1,10 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-// Force dynamic rendering to prevent build issues with searchParams
-export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
@@ -13,7 +10,10 @@ import { FileText, Mail, CheckCircle, AlertCircle, Loader2, RefreshCw } from 'lu
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
 
-export default function VerifyEmailPage() {
+// Force dynamic rendering to prevent build issues with searchParams
+export const dynamic = 'force-dynamic'
+
+function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, resendVerification } = useAuth()
@@ -271,5 +271,34 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Mail className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Loading...</CardTitle>
+              <CardDescription>Please wait while we load the email verification page.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
