@@ -37,7 +37,7 @@ export const supabase = createClient<Database>(
 );
 
 // Server-side Supabase client with service role key
-export const supabaseAdmin = supabaseServiceKey 
+export const supabaseAdmin = supabaseServiceKey && supabaseUrl
   ? createClient<Database>(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
