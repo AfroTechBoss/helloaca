@@ -11,6 +11,7 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signInWithGoogle: () => Promise<{ error?: string }>
   signUp: (email: string, password: string, metadata?: {
     first_name?: string;
     last_name?: string;
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -93,7 +94,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error.message }
       }
 
-      toast.success('Successfully signed in!')
+      // Update state immediately with the session data
+      if (data.session) {
+        setSession(data.session)
+        setUser(data.session.user)
+      }
+
+      return {}
+    } catch (error) {
+      const errorMessage = 'An unexpected error occurred'
+      toast.error(errorMessage)
+      return { error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        toast.error(error.message)
+        return { error: error.message }
+      }
+
+      // OAuth redirect will handle the rest
       return {}
     } catch (error) {
       const errorMessage = 'An unexpected error occurred'
@@ -257,6 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     signIn,
+    signInWithGoogle,
     signUp,
     signOut,
     resetPassword,

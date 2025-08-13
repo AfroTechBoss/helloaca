@@ -38,7 +38,7 @@ const passwordRequirements = [
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { signUp } = useAuth()
+  const { signUp, signInWithGoogle } = useAuth()
   
   // Automatically redirect if user is already authenticated
   useRedirectIfAuthenticated()
@@ -135,12 +135,13 @@ export default function SignUpPage() {
   }
 
   const handleGoogleSignUp = async () => {
-    setIsLoading(true)
     try {
-      // Implement Google OAuth sign-up
-      toast.info('Google sign-up coming soon!')
-    } catch {
-      setError('Failed to sign up with Google')
+      setIsLoading(true)
+      await signInWithGoogle()
+      // The redirect will be handled by the AuthContext after successful sign-in
+    } catch (error: any) {
+      console.error('Google sign-up error:', error)
+      toast.error(error.message || 'Failed to sign up with Google')
     } finally {
       setIsLoading(false)
     }

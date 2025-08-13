@@ -18,7 +18,7 @@ import { useAuth, useRedirectIfAuthenticated } from '@/contexts/AuthContext'
 
 export default function SignInPage() {
   const router = useRouter()
-  const { signIn } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
   
   // Automatically redirect if user is already authenticated
   useRedirectIfAuthenticated()
@@ -50,7 +50,12 @@ export default function SignInPage() {
       }
 
       toast.success('Successfully signed in!')
-      // The useRedirectIfAuthenticated hook will handle the redirect automatically
+      
+      // Explicit redirect to dashboard after successful sign-in
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 500) // Small delay to ensure toast is visible
+      
     } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
@@ -60,11 +65,22 @@ export default function SignInPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    setError('')
     try {
-      // Implement Google OAuth sign-in
-      toast.info('Google sign-in coming soon!')
+      const { error } = await signInWithGoogle()
+      
+      if (error) {
+        setError(typeof error === 'string' ? error : error.message || 'Failed to sign in with Google')
+        return
+      }
+
+      toast.success('Successfully signed in with Google!')
+      
+      // Note: Redirect will be handled by the auth callback page
+      // after Google OAuth completes the flow
+      
     } catch {
-      setError('Failed to sign in with Google')
+      setError('An unexpected error occurred during Google sign-in')
     } finally {
       setIsLoading(false)
     }
