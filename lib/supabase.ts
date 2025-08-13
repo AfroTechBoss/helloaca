@@ -12,23 +12,29 @@ const supabaseAnonKey = typeof window !== 'undefined'
 
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Validate required environment variables
-if (!supabaseUrl) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
-}
-
-if (!supabaseAnonKey) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
+// Validate required environment variables (skip during build time)
+if (typeof window !== 'undefined' || process.env.NODE_ENV !== 'production') {
+  if (!supabaseUrl) {
+    console.warn('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+  }
+  
+  if (!supabaseAnonKey) {
+    console.warn('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
+  }
 }
 
 // Client-side Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key', 
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
   }
-});
+);
 
 // Server-side Supabase client with service role key
 export const supabaseAdmin = supabaseServiceKey 
