@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // Force dynamic rendering to prevent build issues with searchParams
@@ -25,7 +25,7 @@ const passwordRequirements = [
   { label: 'Contains special character', test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) }
 ]
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { resetPassword, updatePassword } = useAuth()
@@ -419,5 +419,37 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold">helloaca</span>
+            </div>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Loading...</CardTitle>
+              <CardDescription>Please wait while we load the page.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }
