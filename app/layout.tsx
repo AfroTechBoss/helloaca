@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'helloaca - Hello AI Contract Analyzer',
+  description: 'Intelligent contract analysis and risk assessment platform',
+  generator: 'helloaca Platform',
 }
 
 export default function RootLayout({
@@ -25,7 +27,22 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'white',
+                color: 'black',
+                border: '1px solid #e5e7eb',
+              },
+            }}
+          />
+        </AuthProvider>
+      </body>
     </html>
   )
 }
