@@ -25,7 +25,7 @@ import {
   Calendar,
   Loader2
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -70,9 +70,10 @@ interface AnalysisData {
   }
 }
 
-export default function AnalysisResultPage({ params }: { params: { id: string } }) {
+export default function AnalysisResultPage({ params }: { params: Promise<{ id: string }> }) {
   useRequireAuth()
   const router = useRouter()
+  const resolvedParams = use(params)
   const [activeTab, setActiveTab] = useState('overview')
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,7 +83,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
     const fetchAnalysis = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/analysis/${params.id}`)
+        const response = await fetch(`/api/analysis/${resolvedParams.id}`)
         
         if (!response.ok) {
           throw new Error('Failed to fetch analysis')
@@ -99,7 +100,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
     }
 
     fetchAnalysis()
-  }, [params.id])
+  }, [resolvedParams.id])
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {

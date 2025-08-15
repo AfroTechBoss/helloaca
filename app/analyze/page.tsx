@@ -24,7 +24,8 @@ import {
   X,
   Download,
   Eye,
-  Zap
+  Zap,
+  ArrowLeft
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
@@ -210,229 +211,258 @@ export default function AnalyzePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analyze Contracts</h1>
-        <p className="text-muted-foreground">
-          Upload your contracts for AI-powered risk analysis and insights
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Header with Logo */}
+      <div className="border-b bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Dashboard</span>
+              </Button>
+              <span className="text-2xl font-limelight font-bold text-brand-primary">helloaca</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Upload className="h-5 w-5" />
-            <span>Upload Contracts</span>
-          </CardTitle>
-          <CardDescription>
-            Drag and drop your contract files or click to browse. Supported formats: PDF, DOC, DOCX, TXT (Max 10MB each)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            {isDragActive ? (
-              <p className="text-blue-600 font-medium">
-                Drop the files here...
-              </p>
-            ) : (
-              <div>
-                <p className="text-gray-600 font-medium mb-2">
-                  Drag & drop contract files here, or click to select
-                </p>
-                <p className="text-sm text-gray-500">
-                  PDF, DOC, DOCX, TXT files up to 10MB each
-                </p>
-              </div>
-            )}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-4">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Page Header */}
+          <div className="pt-4">
+            <h1 className="text-3xl font-bold tracking-tight">Analyze Contracts</h1>
+            <p className="text-muted-foreground">
+              Upload your contracts for AI-powered risk analysis and insights
+            </p>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Uploaded Files */}
-      {files.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Uploaded Files ({files.length})</CardTitle>
-            <CardDescription>
-              Review your uploaded files before analysis
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {files.map((file) => (
-                <div key={file.id} className="flex items-center space-x-4 p-4 border rounded-lg">
-                  <div className="flex-shrink-0">
-                    {getStatusIcon(file.status)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium truncate">{file.name}</p>
-                      {getStatusBadge(file.status)}
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>{formatFileSize(file.size)}</span>
-                      <span>•</span>
-                      <span>{file.type}</span>
-                    </div>
-                    
-                    {(file.status === 'uploading' || file.status === 'analyzing') && (
-                      <div className="mt-2">
-                        <Progress value={file.progress} className="h-1" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    {file.status === 'completed' && file.analysisId && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/analyze/${file.analysisId}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
-                    
-                    {file.status !== 'analyzing' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(file.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Analysis Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Analysis Configuration</CardTitle>
-          <CardDescription>
-            Provide additional context to improve analysis accuracy
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="contractType">Contract Type</Label>
-            <Select value={contractType} onValueChange={setContractType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select contract type" />
-              </SelectTrigger>
-              <SelectContent>
-                {contractTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide any additional context about these contracts..."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Analysis Actions */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Ready to Analyze</h3>
-              <p className="text-sm text-muted-foreground">
-                {files.length} file{files.length !== 1 ? 's' : ''} ready for AI analysis
-              </p>
-            </div>
-            
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setFiles([])
-                  setContractType('')
-                  setDescription('')
-                }}
-                disabled={isAnalyzing}
+          {/* Upload Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Upload className="h-5 w-5" />
+                <span>Upload Contracts</span>
+              </CardTitle>
+              <CardDescription>
+                Drag and drop your contract files or click to browse. Supported formats: PDF, DOC, DOCX, TXT (Max 10MB each)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
               >
-                Clear All
-              </Button>
-              
-              <Button
-                onClick={analyzeContracts}
-                disabled={files.length === 0 || !contractType || isAnalyzing}
-                className="min-w-[120px]"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Zap className="h-4 w-4 mr-2 animate-pulse" />
-                    Analyzing...
-                  </>
+                <input {...getInputProps()} />
+                <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                {isDragActive ? (
+                  <p className="text-blue-600 font-medium">
+                    Drop the files here...
+                  </p>
                 ) : (
-                  <>
-                    <Zap className="h-4 w-4 mr-2" />
-                    Start Analysis
-                  </>
+                  <div>
+                    <p className="text-gray-600 font-medium mb-2">
+                      Drag & drop contract files here, or click to select
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      PDF, DOC, DOCX, TXT files up to 10MB each
+                    </p>
+                  </div>
                 )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Analysis Tips */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="text-blue-800">Analysis Tips</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-blue-700">
-            <li className="flex items-start space-x-2">
-              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Ensure contracts are clearly scanned or typed for best results</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Select the correct contract type to get more accurate risk assessments</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Analysis typically takes 1-3 minutes per contract depending on length</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>You'll receive detailed risk scores, clause analysis, and recommendations</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+          {/* Uploaded Files */}
+          {files.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Uploaded Files ({files.length})</CardTitle>
+                <CardDescription>
+                  Review your uploaded files before analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {files.map((file) => (
+                    <div key={file.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(file.status)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium truncate">{file.name}</p>
+                          {getStatusBadge(file.status)}
+                        </div>
+                        
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <span>{formatFileSize(file.size)}</span>
+                          <span>•</span>
+                          <span>{file.type}</span>
+                        </div>
+                        
+                        {(file.status === 'uploading' || file.status === 'analyzing') && (
+                          <div className="mt-2">
+                            <Progress value={file.progress} className="h-1" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        {file.status === 'completed' && file.analysisId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/analyze/${file.analysisId}`)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        
+                        {file.status !== 'analyzing' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(file.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Analysis Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Analysis Configuration</CardTitle>
+              <CardDescription>
+                Provide additional context to improve analysis accuracy
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="contractType">Contract Type</Label>
+                <Select value={contractType} onValueChange={setContractType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select contract type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contractTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Provide any additional context about these contracts..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Analysis Actions */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Ready to Analyze</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {files.length} file{files.length !== 1 ? 's' : ''} ready for AI analysis
+                  </p>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFiles([])
+                      setContractType('')
+                      setDescription('')
+                    }}
+                    disabled={isAnalyzing}
+                  >
+                    Clear All
+                  </Button>
+                  
+                  <Button
+                    onClick={analyzeContracts}
+                    disabled={files.length === 0 || !contractType || isAnalyzing}
+                    className="min-w-[120px]"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Start Analysis
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Analysis Tips */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-blue-800">Analysis Tips</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-blue-700">
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Ensure contracts are clearly scanned or typed for best results</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Select the correct contract type to get more accurate risk assessments</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Analysis typically takes 30 seconds to 1 minute per contract depending on length</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>You'll receive detailed risk scores, clause analysis, and recommendations</span>
+                </li>
+                 <li className="flex items-start space-x-2">
+                  <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Afterwards you can chat with your contract, just as you would with your lawyer, and get detailed answers to your questions</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
