@@ -11,9 +11,12 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Zap,
+  Crown
 } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 // Mock data - will be replaced with real data from API
 const mockStats = {
@@ -96,11 +99,48 @@ function formatDate(dateString: string) {
   })
 }
 
+interface UserSubscription {
+  subscription_type: 'trial' | 'basic' | 'premium'
+  trial_analyses_used: number
+  trial_analyses_limit: number
+  subscription_status: 'active' | 'cancelled' | 'expired'
+}
+
 export default function DashboardPage() {
   useRequireAuth()
   const { user } = useAuth()
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'User'
+  const userName = (user?.user_metadata?.full_name && typeof user.user_metadata.full_name === 'string') 
+    ? user.user_metadata.full_name.split(' ')[0] 
+    : 'User'
+
+  useEffect(() => {
+    async function fetchSubscription() {
+      if (!user) return
+      
+      try {
+        const response = await fetch('/api/user/subscription')
+        if (response.ok) {
+          const data = await response.json()
+          setSubscription(data.subscription)
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSubscription()
+  }, [user])
+
+  const remainingTrials = subscription 
+    ? Math.max(0, subscription.trial_analyses_limit - subscription.trial_analyses_used)
+    : 0
+  
+  const isTrialUser = subscription?.subscription_type === 'trial'
 
   return (
     <div className="space-y-8">
@@ -111,6 +151,48 @@ export default function DashboardPage() {
           Here&apos;s an overview of your contract analysis activity.
         </p>
       </div>
+
+      {/* Trial Status Banner */}
+      {isTrialUser && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Zap className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-lg text-blue-900">Free Trial</CardTitle>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {remainingTrials} analyses left
+                </Badge>
+              </div>
+              <Button asChild size="sm">
+                <Link href="/dashboard/billing">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade Now
+                </Link>
+              </Button>
+            </div>
+            <CardDescription className="text-blue-700">
+              You&apos;re using the free trial with limited features. Upgrade for unlimited analyses and full results.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-gray-700">Limited risk findings</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-gray-700">Partial recommendations</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                <span className="text-gray-700">Basic clause analysis</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

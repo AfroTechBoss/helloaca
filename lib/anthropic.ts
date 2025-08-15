@@ -175,3 +175,81 @@ export async function explainLegalTerm(term: string, context?: string) {
     };
   }
 }
+
+// Function to analyze contract questions and provide contextual answers
+export async function analyzeContractQuestion(question: string, contractContent: string, analysis?: any) {
+  try {
+    const contextInfo = analysis ? `
+
+Contract Analysis Context:
+- Overall Risk Score: ${analysis.overall_risk_score}/100
+- Risk Level: ${analysis.risk_level}
+- Summary: ${analysis.summary}
+- Key Findings: ${analysis.key_findings?.join(', ')}
+- Recommendations: ${analysis.recommendations?.join(', ')}
+
+Risk Clauses:
+${analysis.risk_clauses?.map((clause: any) => `- ${clause.clause_text} (${clause.risk_level} risk: ${clause.explanation})`).join('\n')}
+
+Missing Clauses:
+${analysis.missing_clauses?.map((clause: any) => `- ${clause.clause_type}: ${clause.description}`).join('\n')}` : '';
+
+    const prompt = `
+You are an expert legal contract analyst. A user has asked a question about their contract. Please provide a comprehensive, accurate answer based on the contract content and analysis.
+
+User Question: "${question}"
+
+Contract Content:
+${contractContent}
+${contextInfo}
+
+Please provide a detailed answer that:
+1. Directly addresses the user's question
+2. References specific contract sections when relevant
+3. Explains any legal implications
+4. Provides actionable advice if appropriate
+5. Highlights any risks or concerns related to the question
+
+Format your response as JSON with the following structure:
+{
+  "answer": "Comprehensive answer to the user's question",
+  "referencedClauses": [
+    {
+      "clauseText": "Relevant clause text",
+      "section": "Section name or number",
+      "relevance": "Why this clause is relevant to the question"
+    }
+  ],
+  "confidence": 0.95,
+  "sources": ["List of contract sections or analysis points referenced"],
+  "recommendations": ["Any specific recommendations based on the question"],
+  "risks": ["Any risks or concerns to highlight"]
+}`;
+
+    const response = await anthropic.messages.create({
+      model: CLAUDE_CONFIG.model,
+      max_tokens: CLAUDE_CONFIG.maxTokens,
+      temperature: 0.1,
+      system: 'You are an expert legal contract analyst who provides accurate, helpful answers about contract content and implications.',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response type from Claude');
+    }
+
+    // Parse the JSON response
+    const result = JSON.parse(content.text);
+    
+    return result;
+  } catch (error) {
+    console.error('Error analyzing contract question:', error);
+    throw new Error('Failed to analyze contract question');
+  }
+}

@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -33,18 +33,54 @@ const publicRoutes = [
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
   const { pathname } = req.nextUrl
 
   try {
-    // Get the current session
-    const {
-      data: { session },
-      error
-    } = await supabase.auth.getSession()
+    // Create Supabase client for middleware
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          detectSessionInUrl: false
+        }
+      }
+    )
 
-    if (error) {
-      console.error('Middleware auth error:', error)
+    // Get session from request headers
+    const authHeader = req.headers.get('authorization')
+    const accessToken = req.cookies.get('sb-access-token')?.value
+    const refreshToken = req.cookies.get('sb-refresh-token')?.value
+    
+    let session = null
+    
+    // Try to get session from cookies first
+    if (accessToken && refreshToken) {
+      try {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+        if (!error && data.session) {
+          session = data.session
+        }
+      } catch (e) {
+        // Session invalid, continue without authentication
+      }
+    }
+    
+    // Fallback: try to get session normally
+    if (!session) {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (!error && data.session) {
+          session = data.session
+        }
+      } catch (e) {
+        // Continue without session
+      }
     }
 
     const isAuthenticated = !!session?.user

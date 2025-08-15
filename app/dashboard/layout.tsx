@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const getUserInitials = () => {
-    if (!user?.user_metadata?.full_name) return 'U'
+    if (!user?.user_metadata?.full_name || typeof user.user_metadata.full_name !== 'string') return 'U'
     const names = user.user_metadata.full_name.split(' ')
     return names.map((name: string) => name[0] || '').join('').toUpperCase().slice(0, 2)
   }
@@ -91,11 +91,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center px-6">
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <FileText className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-gray-900">ACA</span>
+        <div className="flex items-center">
+          <span className="text-2xl font-limelight font-bold text-brand-primary">helloaca</span>
         </div>
       </div>
 
@@ -112,15 +109,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       href={item.href}
                       className={cn(
                         isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50',
+                          ? 'bg-green-50 text-brand-primary'
+                          : 'text-gray-700 hover:text-brand-primary hover:bg-green-50',
                         'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors'
                       )}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <item.icon
                         className={cn(
-                          isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-blue-700',
+                          isActive ? 'text-brand-primary' : 'text-gray-400 group-hover:text-brand-primary',
                           'h-6 w-6 shrink-0'
                         )}
                         aria-hidden="true"
@@ -145,15 +142,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       href={item.href}
                       className={cn(
                         isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50',
+                          ? 'bg-green-50 text-brand-primary'
+                          : 'text-gray-700 hover:text-brand-primary hover:bg-green-50',
                         'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors'
                       )}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <item.icon
                         className={cn(
-                          isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-blue-700',
+                          isActive ? 'text-brand-primary' : 'text-gray-400 group-hover:text-brand-primary',
                           'h-6 w-6 shrink-0'
                         )}
                         aria-hidden="true"

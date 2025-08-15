@@ -12,7 +12,13 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			limelight: ['var(--font-limelight)', 'cursive'],
+  		},
   		colors: {
+  			brand: {
+  				primary: '#4ECCA3',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -24,7 +30,7 @@ const config: Config = {
   				foreground: 'hsl(var(--popover-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
+  				DEFAULT: '#4ECCA3',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {

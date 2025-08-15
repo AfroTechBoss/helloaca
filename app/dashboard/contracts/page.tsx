@@ -299,9 +299,9 @@ export default function ContractsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link href={`/analyze/${contract.id}`}>
+                            <Link href={`/dashboard/contracts/${contract.id}`}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View Analysis
+                              View Details
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem>

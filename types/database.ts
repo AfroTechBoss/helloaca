@@ -49,48 +49,92 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          title: string
-          file_name: string
+          name: string
           file_url: string
           file_size: number
           file_type: string
-          content: string
-          status: 'pending' | 'analyzing' | 'completed' | 'failed'
-          analysis_id: string | null
+          status: 'pending' | 'processing' | 'completed' | 'failed'
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          title: string
-          file_name: string
+          name: string
           file_url: string
           file_size: number
           file_type: string
-          content: string
-          status?: 'pending' | 'analyzing' | 'completed' | 'failed'
-          analysis_id?: string | null
+          status?: 'pending' | 'processing' | 'completed' | 'failed'
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          title?: string
-          file_name?: string
+          name?: string
           file_url?: string
           file_size?: number
           file_type?: string
-          content?: string
-          status?: 'pending' | 'analyzing' | 'completed' | 'failed'
-          analysis_id?: string | null
+          status?: 'pending' | 'processing' | 'completed' | 'failed'
           created_at?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "contracts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          subscription_type: 'trial' | 'basic' | 'premium'
+          trial_analyses_used: number
+          trial_analyses_limit: number
+          subscription_status: 'active' | 'cancelled' | 'expired'
+          paystack_customer_code: string | null
+          paystack_subscription_code: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subscription_type?: 'trial' | 'basic' | 'premium'
+          trial_analyses_used?: number
+          trial_analyses_limit?: number
+          subscription_status?: 'active' | 'cancelled' | 'expired'
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          subscription_type?: 'trial' | 'basic' | 'premium'
+          trial_analyses_used?: number
+          trial_analyses_limit?: number
+          subscription_status?: 'active' | 'cancelled' | 'expired'
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

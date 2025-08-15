@@ -363,13 +363,19 @@ export async function getSubscription(subscriptionCode: string) {
 
 // Validate webhook signature
 export async function validateWebhookSignature(payload: string, signature: string): Promise<boolean> {
-  const crypto = await import('crypto');
-  const hash = crypto
-    .createHmac('sha512', process.env.PAYSTACK_WEBHOOK_SECRET || '')
-    .update(payload)
-    .digest('hex');
+  // Use dynamic import only on server side
+  if (typeof window === 'undefined') {
+    const crypto = await import('crypto');
+    const hash = crypto
+      .createHmac('sha512', process.env.PAYSTACK_WEBHOOK_SECRET || '')
+      .update(payload)
+      .digest('hex');
+    
+    return hash === signature;
+  }
   
-  return hash === signature;
+  // Return false on client side as this should only run on server
+  return false;
 }
 
 // Process webhook events

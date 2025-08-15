@@ -8,6 +8,7 @@ import {
   corsHeaders,
   logRequest
 } from '@/lib/api-middleware';
+import { subscriptionService } from '@/lib/subscription';
 import { z } from 'zod';
 
 const supabase = createClient(
@@ -103,16 +104,44 @@ export const GET = withErrorHandler(async (
     low: missingClauses?.filter(clause => clause.importance === 'low').length || 0,
   };
 
+  // Get user subscription and apply trial restrictions
+  const userSubscription = await subscriptionService.getUserSubscription(user.id);
+  let displayRiskClauses = riskClauses || [];
+  let displayMissingClauses = missingClauses || [];
+  let displayRecommendations = analysis.recommendations || [];
+  let isRestricted = false;
+
+  if (userSubscription && subscriptionService.isTrialUser(userSubscription)) {
+    const restrictedData = subscriptionService.applyTrialRestrictions({
+      risks: riskClauses || [],
+      clauses: missingClauses || [],
+      recommendations: analysis.recommendations || []
+    }, userSubscription);
+    
+    displayRiskClauses = restrictedData.risks || [];
+    displayMissingClauses = restrictedData.clauses || [];
+    displayRecommendations = restrictedData.recommendations || [];
+    isRestricted = true;
+  }
+
   const response = NextResponse.json({
     analysis: {
       ...analysis,
-      risk_clauses: riskClauses || [],
-      missing_clauses: missingClauses || [],
+      recommendations: displayRecommendations,
+      risk_clauses: displayRiskClauses,
+      missing_clauses: displayMissingClauses,
       risk_distribution: riskDistribution,
       missing_clause_distribution: missingClauseDistribution,
       total_risks: riskClauses?.length || 0,
       total_missing_clauses: missingClauses?.length || 0,
+      is_restricted: isRestricted,
+      restriction_message: isRestricted ? 'Some results are hidden in the free trial. Upgrade to see all findings.' : null
     },
+    subscription: userSubscription ? {
+      type: userSubscription.subscription_type,
+      remainingTrials: subscriptionService.getRemainingTrials(userSubscription),
+      isTrialUser: subscriptionService.isTrialUser(userSubscription)
+    } : null
   });
 
   logRequest(request, response);

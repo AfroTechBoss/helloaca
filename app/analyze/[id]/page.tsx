@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TrialRestrictionBanner } from '@/components/TrialRestrictionBanner'
 import {
   AlertTriangle,
   CheckCircle,
@@ -21,130 +22,84 @@ import {
   Eye,
   Clock,
   User,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-// Mock analysis data
-const analysisData = {
-  id: 'analysis_123',
-  contractName: 'Service Agreement - TechCorp.pdf',
-  contractType: 'Service Agreement',
-  uploadDate: '2024-01-15',
-  analysisDate: '2024-01-15',
-  status: 'completed',
-  overallRiskScore: 72,
-  riskLevel: 'Medium',
-  summary: 'This service agreement contains several moderate risk factors that should be addressed. The contract lacks clear termination clauses and has vague liability limitations that could expose your organization to potential disputes.',
-  keyFindings: [
-    'Missing force majeure clause',
-    'Unclear intellectual property ownership',
-    'Insufficient liability limitations',
-    'Vague termination conditions'
-  ],
-  riskFactors: [
-    {
-      category: 'Termination',
-      risk: 'High',
-      score: 85,
-      description: 'Contract lacks clear termination procedures and notice requirements',
-      recommendation: 'Add specific termination clauses with 30-day notice requirement',
-      clauses: ['Section 8.1', 'Section 8.3']
-    },
-    {
-      category: 'Liability',
-      risk: 'High',
-      score: 80,
-      description: 'Liability limitations are insufficient and one-sided',
-      recommendation: 'Include mutual liability caps and exclude consequential damages',
-      clauses: ['Section 12.2']
-    },
-    {
-      category: 'Intellectual Property',
-      risk: 'Medium',
-      score: 65,
-      description: 'IP ownership and licensing terms are ambiguous',
-      recommendation: 'Clarify IP ownership and include work-for-hire provisions',
-      clauses: ['Section 6.1', 'Section 6.4']
-    },
-    {
-      category: 'Payment Terms',
-      risk: 'Low',
-      score: 35,
-      description: 'Payment terms are clearly defined with reasonable conditions',
-      recommendation: 'Consider adding late payment penalties',
-      clauses: ['Section 4.1', 'Section 4.2']
-    },
-    {
-      category: 'Confidentiality',
-      risk: 'Medium',
-      score: 55,
-      description: 'Confidentiality provisions could be more comprehensive',
-      recommendation: 'Expand confidentiality scope and extend duration',
-      clauses: ['Section 9.1']
-    }
-  ],
-  missingClauses: [
-    {
-      clause: 'Force Majeure',
-      importance: 'High',
-      description: 'Protection against unforeseeable circumstances',
-      recommendation: 'Add force majeure clause to protect against events beyond control'
-    },
-    {
-      clause: 'Dispute Resolution',
-      importance: 'High',
-      description: 'Mechanism for resolving conflicts',
-      recommendation: 'Include mediation and arbitration procedures'
-    },
-    {
-      clause: 'Data Protection',
-      importance: 'Medium',
-      description: 'Compliance with data privacy regulations',
-      recommendation: 'Add GDPR/CCPA compliance requirements'
-    },
-    {
-      clause: 'Insurance Requirements',
-      importance: 'Medium',
-      description: 'Professional liability coverage',
-      recommendation: 'Require minimum insurance coverage amounts'
-    }
-  ],
-  recommendations: [
-    {
-      priority: 'High',
-      title: 'Add Comprehensive Termination Clause',
-      description: 'Include specific termination procedures, notice requirements, and post-termination obligations.',
-      impact: 'Reduces legal disputes and provides clear exit strategy'
-    },
-    {
-      priority: 'High',
-      title: 'Strengthen Liability Limitations',
-      description: 'Add mutual liability caps and exclude consequential damages for both parties.',
-      impact: 'Limits financial exposure and creates balanced risk allocation'
-    },
-    {
-      priority: 'Medium',
-      title: 'Clarify Intellectual Property Rights',
-      description: 'Define ownership of work products and include work-for-hire provisions.',
-      impact: 'Prevents IP disputes and ensures clear ownership'
-    },
-    {
-      priority: 'Medium',
-      title: 'Add Force Majeure Protection',
-      description: 'Include force majeure clause covering pandemics, natural disasters, and government actions.',
-      impact: 'Protects against performance failures due to uncontrollable events'
-    }
-  ]
+interface AnalysisData {
+  id: string
+  contract_id: string
+  overall_risk_score: number
+  summary: string
+  key_findings: string[]
+  recommendations: string[]
+  created_at: string
+  contract: {
+    id: string
+    name: string
+    type: string
+    created_at: string
+  }
+  risk_clauses: Array<{
+    id: string
+    clause_text: string
+    risk_level: string
+    risk_score: number
+    explanation: string
+    recommendation: string
+    clause_reference: string
+  }>
+  missing_clauses: Array<{
+    id: string
+    clause_type: string
+    importance: string
+    description: string
+    recommendation: string
+  }>
+  is_restricted?: boolean
+  restriction_message?: string
+  subscription?: {
+    subscription_type: string
+    trial_analyses_used: number
+    trial_analyses_limit: number
+    subscription_status: string
+  }
 }
 
 export default function AnalysisResultPage({ params }: { params: { id: string } }) {
   useRequireAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/analysis/${params.id}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch analysis')
+        }
+        
+        const data = await response.json()
+        setAnalysisData(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        toast.error('Failed to load analysis')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalysis()
+  }, [params.id])
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -180,8 +135,50 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
     toast.success('Analysis link copied to clipboard')
   }
 
+  const getRiskLevel = (score: number) => {
+    if (score >= 70) return 'High'
+    if (score >= 40) return 'Medium'
+    return 'Low'
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading analysis...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !analysisData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <XCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error || 'Analysis not found'}</p>
+          <Button onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const riskLevel = getRiskLevel(analysisData.overall_risk_score)
+
   return (
     <div className="space-y-6">
+      {/* Trial Restriction Banner */}
+      {analysisData.is_restricted && (
+        <TrialRestrictionBanner
+          isRestricted={true}
+          restrictionMessage={analysisData.restriction_message || 'Some content is hidden in the free trial'}
+          subscription={analysisData.subscription}
+        />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -191,7 +188,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Contract Analysis</h1>
-            <p className="text-muted-foreground">{analysisData.contractName}</p>
+            <p className="text-muted-foreground">{analysisData.contract.name}</p>
           </div>
         </div>
         
@@ -215,12 +212,12 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <div className="text-3xl font-bold">{analysisData.overallRiskScore}%</div>
-              <Badge className={getRiskColor(analysisData.riskLevel)}>
-                {analysisData.riskLevel} Risk
+              <div className="text-3xl font-bold">{analysisData.overall_risk_score}%</div>
+              <Badge className={getRiskColor(riskLevel)}>
+                {riskLevel} Risk
               </Badge>
             </div>
-            <Progress value={analysisData.overallRiskScore} className="mt-2" />
+            <Progress value={analysisData.overall_risk_score} className="mt-2" />
           </CardContent>
         </Card>
         
@@ -229,7 +226,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
             <CardTitle className="text-sm font-medium">Risk Factors</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{analysisData.riskFactors.length}</div>
+            <div className="text-3xl font-bold">{analysisData.risk_clauses.length}</div>
             <p className="text-sm text-muted-foreground">Issues identified</p>
           </CardContent>
         </Card>
@@ -239,7 +236,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
             <CardTitle className="text-sm font-medium">Missing Clauses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{analysisData.missingClauses.length}</div>
+            <div className="text-3xl font-bold">{analysisData.missing_clauses.length}</div>
             <p className="text-sm text-muted-foreground">Recommended additions</p>
           </CardContent>
         </Card>
@@ -251,7 +248,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
           <CardContent>
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{analysisData.analysisDate}</span>
+              <span className="text-sm">{new Date(analysisData.created_at).toLocaleDateString()}</span>
             </div>
             <p className="text-sm text-muted-foreground">Completed</p>
           </CardContent>
@@ -284,7 +281,7 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
               <div>
                 <h4 className="font-medium mb-3">Key Findings</h4>
                 <ul className="space-y-2">
-                  {analysisData.keyFindings.map((finding, index) => (
+                  {analysisData.key_findings.map((finding, index) => (
                     <li key={index} className="flex items-center space-x-2 text-sm">
                       <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
                       <span>{finding}</span>
@@ -305,15 +302,15 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Contract Name:</span>
-                    <span className="text-sm font-medium">{analysisData.contractName}</span>
+                    <span className="text-sm font-medium">{analysisData.contract.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Contract Type:</span>
-                    <span className="text-sm font-medium">{analysisData.contractType}</span>
+                    <span className="text-sm font-medium">{analysisData.contract.type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Upload Date:</span>
-                    <span className="text-sm font-medium">{analysisData.uploadDate}</span>
+                    <span className="text-sm font-medium">{new Date(analysisData.contract.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -324,12 +321,12 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Status:</span>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      {analysisData.status}
+                      Completed
                     </Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Analysis Date:</span>
-                    <span className="text-sm font-medium">{analysisData.analysisDate}</span>
+                    <span className="text-sm font-medium">{new Date(analysisData.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -347,45 +344,57 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {analysisData.riskFactors.map((factor, index) => (
-                  <div key={index} className="border rounded-lg p-4">
+                {analysisData.risk_clauses.map((clause, index) => (
+                  <div key={clause.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <h4 className="font-medium">{factor.category}</h4>
-                        <Badge className={getRiskColor(factor.risk)}>
-                          {factor.risk} Risk
+                        <h4 className="font-medium">Risk Clause {index + 1}</h4>
+                        <Badge className={getRiskColor(clause.risk_level)}>
+                          {clause.risk_level} Risk
                         </Badge>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold">{factor.score}%</div>
+                        <div className="text-lg font-bold">{clause.risk_score}%</div>
                         <div className="text-xs text-muted-foreground">Risk Score</div>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
                       <div>
-                        <h5 className="text-sm font-medium mb-1">Description</h5>
-                        <p className="text-sm text-muted-foreground">{factor.description}</p>
+                        <h5 className="text-sm font-medium mb-1">Clause Text</h5>
+                        <p className="text-sm text-muted-foreground bg-gray-50 p-2 rounded italic">
+                          "{clause.clause_text}"
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h5 className="text-sm font-medium mb-1">Risk Explanation</h5>
+                        <p className="text-sm text-muted-foreground">{clause.explanation}</p>
                       </div>
                       
                       <div>
                         <h5 className="text-sm font-medium mb-1">Recommendation</h5>
-                        <p className="text-sm text-muted-foreground">{factor.recommendation}</p>
+                        <p className="text-sm text-muted-foreground">{clause.recommendation}</p>
                       </div>
                       
-                      <div>
-                        <h5 className="text-sm font-medium mb-1">Related Clauses</h5>
-                        <div className="flex flex-wrap gap-2">
-                          {factor.clauses.map((clause, clauseIndex) => (
-                            <Badge key={clauseIndex} variant="outline" className="text-xs">
-                              {clause}
-                            </Badge>
-                          ))}
+                      {clause.clause_reference && (
+                        <div>
+                          <h5 className="text-sm font-medium mb-1">Reference</h5>
+                          <Badge variant="outline" className="text-xs">
+                            {clause.clause_reference}
+                          </Badge>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
+                
+                {analysisData.risk_clauses.length === 0 && (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No significant risk clauses identified</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -401,10 +410,10 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analysisData.missingClauses.map((clause, index) => (
-                  <div key={index} className="border rounded-lg p-4">
+                {analysisData.missing_clauses.map((clause, index) => (
+                  <div key={clause.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium">{clause.clause}</h4>
+                      <h4 className="font-medium">{clause.clause_type}</h4>
                       <Badge variant={getPriorityColor(clause.importance)}>
                         {clause.importance} Priority
                       </Badge>
@@ -423,6 +432,13 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
                     </div>
                   </div>
                 ))}
+                
+                {analysisData.missing_clauses.length === 0 && (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <p className="text-muted-foreground">All important clauses are present</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -438,28 +454,30 @@ export default function AnalysisResultPage({ params }: { params: { id: string } 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analysisData.recommendations.map((rec, index) => (
+                {analysisData.recommendations.map((recommendation, index) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium">{rec.title}</h4>
-                      <Badge variant={getPriorityColor(rec.priority)}>
-                        {rec.priority} Priority
+                      <h4 className="font-medium">Recommendation {index + 1}</h4>
+                      <Badge variant="default">
+                        Priority
                       </Badge>
                     </div>
                     
                     <div className="space-y-2">
                       <div>
                         <h5 className="text-sm font-medium mb-1">Action Required</h5>
-                        <p className="text-sm text-muted-foreground">{rec.description}</p>
-                      </div>
-                      
-                      <div>
-                        <h5 className="text-sm font-medium mb-1">Expected Impact</h5>
-                        <p className="text-sm text-muted-foreground">{rec.impact}</p>
+                        <p className="text-sm text-muted-foreground">{recommendation}</p>
                       </div>
                     </div>
                   </div>
                 ))}
+                
+                {analysisData.recommendations.length === 0 && (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No additional recommendations at this time</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

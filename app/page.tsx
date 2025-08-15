@@ -134,11 +134,8 @@ export default function HomePage() {
       <nav className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold">helloaca</span>
+            <div className="flex items-center">
+              <span className="text-2xl font-limelight font-bold text-brand-primary">helloaca</span>
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
@@ -166,14 +163,14 @@ export default function HomePage() {
       <section className="relative py-20 lg:py-32 bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-6 bg-blue-100 text-blue-800 hover:bg-blue-100">
+            <Badge className="mb-6 bg-green-100 text-green-800 hover:bg-green-100">
               <Zap className="h-3 w-3 mr-1" />
               AI-Powered Contract Analysis
             </Badge>
             
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
               Analyze Contracts with
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> AI Precision</span>
+              <span className="bg-gradient-to-r from-brand-primary to-green-400 bg-clip-text text-transparent"> AI Precision</span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">

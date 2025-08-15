@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { Limelight } from 'next/font/google'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Toaster } from 'sonner'
 import './globals.css'
+
+const limelight = Limelight({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-limelight',
+})
 
 export const metadata: Metadata = {
   title: 'helloaca - Hello AI Contract Analyzer',
@@ -93,15 +100,8 @@ export default function RootLayout({
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
         />
         
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
       </head>
-      <body>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${limelight.variable}`}>
         <AuthProvider>
           {children}
           <Toaster 

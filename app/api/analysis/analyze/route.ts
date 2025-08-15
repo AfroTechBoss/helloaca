@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { getCurrentUser } from '@/lib/supabase';
 import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
-import { validateRequest, checkSubscriptionLimits, ApiErrorResponse, withErrorHandler, logRequest, corsHeaders } from '@/lib/api-middleware';
+import { validateRequest, ApiErrorResponse, withErrorHandler, logRequest, corsHeaders } from '@/lib/api-middleware';
+import { subscriptionService } from '@/lib/subscription';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -153,15 +154,14 @@ export async function POST(request: NextRequest) {
   const contract_id = contractId; // Use consistent variable naming
 
   // Check subscription limits for analysis
-  const subscriptionCheck = await checkSubscriptionLimits(user.id, 'analysis');
-  if (!subscriptionCheck.allowed) {
+  const subscriptionCheck = await subscriptionService.canUserAnalyze(user.id);
+  if (!subscriptionCheck.canAnalyze) {
     throw new ApiErrorResponse(
       subscriptionCheck.reason || 'Analysis limit exceeded',
       403,
       'SUBSCRIPTION_LIMIT_EXCEEDED',
       {
-        limit: subscriptionCheck.limit,
-        current: subscriptionCheck.current
+        subscription: subscriptionCheck.subscription
       }
     );
   }
@@ -296,6 +296,19 @@ export async function POST(request: NextRequest) {
     .update({ status: 'completed' })
     .eq('id', contract_id);
 
+  // Increment trial usage if user is on trial
+  if (subscriptionCheck.subscription && subscriptionService.isTrialUser(subscriptionCheck.subscription)) {
+    await subscriptionService.incrementTrialUsage(user.id);
+  }
+
+  // Apply trial restrictions to analysis results
+  const restrictedAnalysis = subscriptionCheck.subscription 
+    ? subscriptionService.applyTrialRestrictions({
+        risks: analysisResult.risk_clauses,
+        recommendations: analysisResult.recommendations
+      }, subscriptionCheck.subscription)
+    : { risks: analysisResult.risk_clauses, recommendations: analysisResult.recommendations };
+
   const response = NextResponse.json({
     message: 'Analysis completed successfully',
     analysis: {
@@ -304,13 +317,14 @@ export async function POST(request: NextRequest) {
       overallRiskScore: analysis.overall_risk_score,
       summary: analysis.summary,
       keyFindings: analysis.key_findings,
-      recommendations: analysis.recommendations,
+      recommendations: restrictedAnalysis.recommendations,
       createdAt: analysis.created_at,
     },
-    usage: {
-      current: subscriptionCheck.current! + 1,
-      limit: subscriptionCheck.limit
-    }
+    subscription: subscriptionCheck.subscription ? {
+      type: subscriptionCheck.subscription.subscription_type,
+      remainingTrials: subscriptionService.getRemainingTrials(subscriptionCheck.subscription),
+      isTrialUser: subscriptionService.isTrialUser(subscriptionCheck.subscription)
+    } : null
   });
 
   logRequest(request, response);

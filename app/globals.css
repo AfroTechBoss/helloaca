@@ -43,6 +43,9 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --font-sans: ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'Courier New', monospace;
+    --font-limelight: 'Limelight', cursive;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -83,6 +86,9 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  html {
+    font-family: var(--font-sans), system-ui, sans-serif;
   }
   body {
     @apply bg-background text-foreground;

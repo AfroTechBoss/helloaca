@@ -3,9 +3,10 @@ export const APP_CONFIG = {
   name: 'helloaca - Hello AI Contract Analyzer',
   description: 'Professional AI-powered contract analysis platform',
   version: '1.0.0',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  supportEmail: process.env.SUPPORT_EMAIL || 'support@aca.com',
-  adminEmail: process.env.ADMIN_EMAIL || 'admin@aca.com',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'http://helloaca.xyz',
+
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@helloaca.xyz',
+  adminEmail: process.env.ADMIN_EMAIL || 'admin@aca.helloaca.xyz',
 };
 
 // API endpoints
