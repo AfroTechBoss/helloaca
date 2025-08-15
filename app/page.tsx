@@ -168,9 +168,9 @@ export default function HomePage() {
               AI-Powered Contract Analysis
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 font-sans">
               Analyze Contracts with
-              <span className="bg-gradient-to-r from-brand-primary to-green-400 bg-clip-text text-transparent"> AI Precision</span>
+              <span className="bg-gradient-to-r from-brand-primary to-green-400 bg-clip-text text-transparent font-limelight"> AI Precision</span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -406,11 +406,8 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">helloaca</span>
+              <div className="flex items-center mb-4">
+                <span className="text-xl font-limelight font-bold text-brand-primary">helloaca</span>
               </div>
               <p className="text-gray-400">
                 Advanced AI-powered contract analysis for modern legal teams.

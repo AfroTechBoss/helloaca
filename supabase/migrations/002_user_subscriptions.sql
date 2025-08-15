@@ -41,8 +41,30 @@ GRANT ALL PRIVILEGES ON user_subscriptions TO service_role;
 CREATE OR REPLACE FUNCTION create_user_subscription()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Ensure public.users record exists first
+  INSERT INTO public.users (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name', 
+      CONCAT(
+        COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
+        ' ',
+        COALESCE(NEW.raw_user_meta_data->>'last_name', '')
+      )
+    )
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    updated_at = NOW();
+  
+  -- Then create subscription record
   INSERT INTO user_subscriptions (user_id)
-  VALUES (NEW.id);
+  VALUES (NEW.id)
+  ON CONFLICT (user_id) DO NOTHING;
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -5,6 +5,8 @@
 CREATE OR REPLACE FUNCTION create_public_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- This function is now redundant as create_user_subscription handles user creation
+  -- But we keep it for backwards compatibility and to handle edge cases
   INSERT INTO public.users (id, email, full_name)
   VALUES (
     NEW.id,

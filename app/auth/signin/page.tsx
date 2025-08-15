@@ -70,7 +70,7 @@ export default function SignInPage() {
       const { error } = await signInWithGoogle()
       
       if (error) {
-        setError(typeof error === 'string' ? error : error.message || 'Failed to sign in with Google')
+        setError(error)
         return
       }
 
@@ -91,11 +91,8 @@ export default function SignInPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">helloaca</span>
+          <Link href="/" className="flex items-center justify-center mb-6">
+            <span className="text-2xl font-limelight font-bold text-brand-primary">helloaca</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
           <p className="mt-2 text-gray-600">

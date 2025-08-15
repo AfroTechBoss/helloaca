@@ -15,7 +15,7 @@ const limelight = Limelight({
 export const metadata: Metadata = {
   title: 'helloaca - Hello AI Contract Analyzer',
   description: 'Intelligent contract analysis and risk assessment platform',
-  generator: 'helloaca Platform',
+  generator: 'helloaca',
 }
 
 export default function RootLayout({
